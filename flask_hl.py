@@ -13,7 +13,7 @@ app.config.update(dict(
 def index():
     return "Hello,World"
 
-@app.route('/login', methods=["POST, GET"])
+@app.route('/login', methods=["POST", "GET"])
 def login():
     if request.method == "POST":
         if request.form("username") != app.config["USERNAME"] and request.form("password") != app.config["PASSWORD"]:
