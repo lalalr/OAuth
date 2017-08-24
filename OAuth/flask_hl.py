@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, url_for, render_template, request, abort
 
 app = Flask(__name__)
 
@@ -12,17 +12,14 @@ app.config.update(dict(
 @app.route('/')
 def index():
     return "Hello,World"
-'''
-@app.route('/login')
+
+@app.route('/login', methods=["POST, GET"])
 def login():
-    error = None
-    if username != app.config['USERNAME']:
-        error = "用户名出错"
-    elif password != app.config['PASSWORD']:
-        error = "密码错误"
-    else:
-        return render_template('login.html',username=username,password=password)
-'''
+    if request.method == "POST":
+        if request.form("username") != app.config["USERNAME"] and request.form("password") != app.config["PASSWORD"]:
+            abort(401)
+    return render_template("login.html")
+
 
 if __name__ == '__main__':
     app.run()
