@@ -16,7 +16,7 @@ def index():
 @app.route('/login', methods=["POST", "GET"])
 def login():
     if request.method == "POST":
-        if request.form("username") != app.config["USERNAME"] and request.form("password") != app.config["PASSWORD"]:
+        if request.form["username"] != app.config["USERNAME"] and request.form["password"] != app.config["PASSWORD"]:
             abort(401)
     return render_template("login.html")
 
