@@ -10,7 +10,7 @@ mysql = MySQL(app)
 
 app.config.update(dict(
     SECRET_KEY = 'key',
-    MYSQL_HOST = '3306'
+    MYSQL_HOST = '3306',
     MYSQL_USER = 'root',
     MYSQL_PASSWORD = '123456',
     MYSQL_DB = 'user'
