@@ -1,12 +1,14 @@
 {% if error %}
 <div class="flash">{{ error }}</div>
 {% endif %}
-<form action="{{  url_for('login') }}" method="post">
+<form action="{{  url_for('register') }}" method="post">
     <dl>
         <dt>Username:
         <dd><input type="text" name="username">
         <dt>Password: 
         <dd><input type="password" name="password">
-        <dd><input type="submit" value="Login">
+        <dt>Confirm password:
+        <dd><input type="password" name="password2">
+        <dd><input type="submit" value="register">
     </dl>
 </form>
