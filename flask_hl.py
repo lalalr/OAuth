@@ -1,46 +1,33 @@
 # -*- coding: utf-8 -*-
-import os
-from flask_mysqldb import MySQL
 from flask import Flask, redirect, url_for, render_template, request, abort, \
-session, abort,  _app_ctx_stack, g
-from werkzeug.security import generate_password_hash, check_password_hash
+session
+from sqlalchemy import create_engine
+from sqlalchemy import Column, Integer, VARCHAR
+from sqlalchemy.ext.declarative import declarative_base
+import bcrypt
 
 app = Flask(__name__)
-mysql = MySQL(app)
+engine = create_engine('mysql://root:123456@localhost/test')
+Base = declarative_base()
 
 app.config.update(dict(
     SECRET_KEY = 'key',
-    MYSQL_HOST = '3306',
-    MYSQL_USER = 'root',
-    MYSQL_PASSWORD = '123456',
-    MYSQL_DB = 'user'
 ))
 
-def get_db():
-    top=_app_ctx_stack
-    if not hasattr(g, 'mysql_db'):
-        top.mysql_db = mysql.connect()
-        top.mysql_db.row_factory = mysql.row
-    return top.mysql_db
-        
+class User(Base):
+    __tablename__ = 'users'
+    user_id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(VARCHAR(16), unique=True)
+    password = Column(VARCHAR(32))
 
-def init_db():
-    pass
-
-@app.teardown_appcontext
-def close_db():
-    top = _app_ctx_stack
-    if hasattr(g,'mysql_db'):
-        top.mysql_db.close()
-
-def query_db(query, args=(), one=False):
-    cur = get_db().execute(query, args)
-    rv = cur.fetchall()
-    return (rv[0] if rv else None) if one else rv
-
-def get_user_id(username):
-    rv = query_db('select user_id from user where username = ?',[username], one=True)
-    return rv[0] if rv else None
+    def __init__(self, username, plaintext_password):
+        self.username = username
+        self.password = plaintext_password
+"""
+    def verify_password(self, password):
+        pwhash = bcrypt.hashpw(password, self.password)
+        return self.password == pwhash
+"""
 
 @app.route('/')
 def index():
@@ -50,17 +37,14 @@ def index():
         message = "admin"
     return render_template("index.html", message=message)
 
-""" 
-need check
-"""
 @app.route('/login', methods=["POST", "GET"])
 def login():
     error=None
     if request.method == "POST":
-        user = query_db('''select * from user where username = ?''', [request.form['username']], one = True)
+        user = User.query.filter_by(request.form['username']).first()
         if user is None:
             error = "账号错误"
-        elif not check_password_hash(user['pw_hash'],request.form['password']):
+        elif not User.verify_password(request.form['passworld']):
             error = "密码错误"
         else:
             session['logged_in'] = True
@@ -82,15 +66,14 @@ def register():
             error = "密码为空"
         elif request.form['password'] != request.form['password2']:
             error = "与上面的密码不符"
-        elif get_user_id(request.form['username']) is not None:
+##
+        elif User.query.filter_by(request.form['username']).first() is not None:
+
             error = "账号名已存在"
         else:
-            db = get_db()
-            db.execute('''insert into user (username, pw_hash) values (?, ?)''',
-              [request.form['username'],
-                generate_password_hash(request.form['password'])
-                ])
-            db.commit()
+            new_user = User(request.form['username'], request.form['password'])
+            session.add(new_user)
+            session.commit()
             return redirect(url_for('index'))
     return render_template('register.html', error=error)
 
