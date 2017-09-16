@@ -5,6 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy import Column, Integer, VARCHAR
 from sqlalchemy.ext.declarative import declarative_base
 import bcrypt
+import pymysql
 
 app = Flask(__name__)
 engine = create_engine('mysql+pymysql://root:W!1234@localhost/test')
