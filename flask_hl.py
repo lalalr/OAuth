@@ -7,7 +7,7 @@ from sqlalchemy.ext.declarative import declarative_base
 import bcrypt
 
 app = Flask(__name__)
-engine = create_engine('mysql://root:123456@localhost/test')
+engine = create_engine('mysql+pymysql://root:W!1234@localhost/test')
 Base = declarative_base()
 
 app.config.update(dict(
