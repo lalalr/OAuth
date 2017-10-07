@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, redirect, url_for, render_template, request, abort, \
-session
+import sys
+from flask import Flask, redirect, url_for, render_template, request, session
 from sqlalchemy import create_engine
 from sqlalchemy import Column, Integer, VARCHAR
 from sqlalchemy.ext.declarative import declarative_base
-import bcrypt
-import pymysql
+from sqlalchemy.orm import sessionmaker
+from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
-engine = create_engine('mysql+pymysql://root:W!1234@localhost/test')
+engine = create_engine('mysql+pymysql://root:123456@localhost/test')
 Base = declarative_base()
+Session = sessionmaker(bind=engine)
+sess = Session()
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 app.config.update(dict(
     SECRET_KEY = 'key',
@@ -24,11 +28,10 @@ class User(Base):
     def __init__(self, username, plaintext_password):
         self.username = username
         self.password = plaintext_password
-"""
-    def verify_password(self, password):
-        pwhash = bcrypt.hashpw(password, self.password)
-        return self.password == pwhash
-"""
+
+    def __repr__(self):
+        return "<users(user_id='%s', username='%s', password='%s')>" % (
+            self.user_id, self.username, self.password)
 
 @app.route('/')
 def index():
@@ -42,7 +45,7 @@ def index():
 def login():
     error=None
     if request.method == "POST":
-        user = User.query.filter_by(request.form['username']).first()
+        user = sess.query(User).filter(username = request.form['username'])
         if user is None:
             error = "账号错误"
         elif not User.verify_password(request.form['passworld']):
@@ -67,17 +70,14 @@ def register():
             error = "密码为空"
         elif request.form['password'] != request.form['password2']:
             error = "与上面的密码不符"
-##
-        elif User.query.filter_by(request.form['username']).first() is not None:
-
+        elif sess.query(User).filter(User.username == request.form['username']).first() is None:
             error = "账号名已存在"
         else:
             new_user = User(request.form['username'], request.form['password'])
-            session.add(new_user)
-            session.commit()
+            sess.add(new_user)
+            sess.commit()
             return redirect(url_for('index'))
     return render_template('register.html', error=error)
-
 
 if __name__ == '__main__':
     app.run(debug=True)
