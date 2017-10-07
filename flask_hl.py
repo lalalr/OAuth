@@ -45,7 +45,7 @@ def index():
 def login():
     error=None
     if request.method == "POST":
-        user = sess.query(User).filter(username = request.form['username'])
+        user = sess.query(User).filter(User.username == request.form['username'])
         if user is None:
             error = "账号错误"
         elif not User.verify_password(request.form['passworld']):
